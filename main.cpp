@@ -1,5 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext> // Для доступу до кореневого контексту QML
+
+#include "backendclient.h" // Включаємо новий клас
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +15,11 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
+
+    // Створюємо екземпляр BackendClient та реєструємо його в QML контексті
+    BackendClient backendClient;
+    engine.rootContext()->setContextProperty("backendClient", &backendClient);
+
     engine.loadFromModule("GandalfWhite", "Main");
 
     return app.exec();
