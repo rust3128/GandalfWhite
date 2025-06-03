@@ -23,6 +23,8 @@ qt_add_qml_module(GandalfWhite
         Main.qml
         SOURCES backendclient.h backendclient.cpp
         RESOURCES GandalfWhite.qrc
+        QML_FILES AboutDialog.qml
+        RESOURCES build_number.txt
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
