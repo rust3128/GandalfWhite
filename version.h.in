@@ -1,0 +1,17 @@
+#ifndef GANDALF_WHITE_VERSION_H // Змінено на унікальний ідентифікатор для GandalfWhite
+#define GANDALF_WHITE_VERSION_H
+
+// Макроси для компонентів версії
+#define GW_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define GW_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define GW_VERSION_BUILD @GW_VERSION_BUILD@ // Замінник для номера збірки
+
+// Рядок повної версії
+#define GW_VERSION_STR "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@GW_VERSION_BUILD@"
+
+// Дата та час збірки, згенеровані CMake
+#define GW_BUILD_DATE "@GW_BUILD_DATE_CMAKE@"
+#define GW_BUILD_TIME "@GW_BUILD_TIME_CMAKE@"
+#define GW_BUILD_DATETIME "@GW_BUILD_DATETIME_CMAKE@"
+
+#endif // GANDALF_WHITE_VERSION_H

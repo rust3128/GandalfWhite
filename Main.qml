@@ -1,80 +1,94 @@
-// Main.qml - це основний файл інтерфейсу вашого клієнтського застосунку GandalfWhite.
-
+// AboutDialog.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-// Використовуємо ApplicationWindow замість Window для більш складного інтерфейсу
-ApplicationWindow {
-    id: appWindow // Додамо ID для посилання на вікно
-    width: 800 // Збільшимо ширину для бічного меню
-    height: 600
-    visible: true
-    title: "GandalfWhite - ArnorBeacon Client"
+Dialog {
+    id: aboutDialog
+    title: "Про програму GandalfWhite"
+    width: 400
+    height: 480 // Або ваша оптимальна висота
+    modal: true
+    // anchors.centerIn: parent // Цей рядок має бути видалений
 
-    // ---------- БЛОК ІНТЕГРАЦІЇ З C++ (backendClient) ----------
+    // --- Зміни для закруглених кутів ---
+    // Встановлюємо прозорий фон для самого Dialog, щоб наш кастомний фон був видимим
+    background: Rectangle {
+        color: aboutDialog.Material.background // Використовуємо стандартний колір фону Qt Material
+        radius: 15 // Радіус закруглення кутів
+        border.color: "lightgray" // Додаємо тонку рамку
+        border.width: 1
+    }
+    // --- Кінець змін для закруглених кутів ---
+
+    // --- Зміни для центрування кнопки "OK" ---
+    // Замість standardButtons використовуємо footer для повного контролю
+    standardButtons: undefined // Вимикаємо стандартні кнопки
+    footer: Frame { // Використовуємо Frame або Rectangle для футера
+        Layout.fillWidth: true
+        padding: 10 // Відступи навколо кнопки
+
+        RowLayout {
+            Layout.fillWidth: true
+            // Центруємо вміст RowLayout (нашу кнопку)
+            Layout.alignment: Qt.AlignHCenter
+
+            Button {
+                text: standardButtons.ok.text // Отримуємо текст "OK" зі стандартних кнопок
+                onClicked: aboutDialog.close() // Закриваємо діалог при натисканні
+                Layout.preferredWidth: 100 // Фіксована ширина кнопки для кращого вигляду
+            }
+        }
+    }
+    // --- Кінець змін для центрування кнопки "OK" ---
+
     Connections {
         target: backendClient
 
-        function onStatusReceived(data) {
-            // Тепер ми не відображаємо детальний статус в інтерфейсі,
-            // і не надсилаємо автоматичні запити.
-            console.log("QML: Status Data Received (not displayed): ", JSON.stringify(data));
-        }
-
-        // Версія поки що не обробляється
         function onVersionReceived(data) {
-            console.log("QML: Version Data Received (not displayed): ", JSON.stringify(data));
+            serverFullVersionLabel.text = "<b>Повна версія:</b> " + data.version.full_version;
+            serverBuildDateTimeLabel.text = "<b>Час збірки:</b> " + data.version.build_datetime;
+            console.log("QML: Server Version Data Applied to AboutDialog.");
         }
 
         function onNetworkError(errorMessage) {
-            console.error("QML: Network Error (not displayed): ", errorMessage);
-        }
-    }
-    // ---------- КІНЕЦЬ БЛОГІВ ІНТЕГРАЦІЇ З C++ ----------
-
-    // --- Header (Верхня панель) ---
-    header: ToolBar {
-        width: parent.width
-
-        RowLayout {
-            width: parent.width
-            spacing: 0
-
-            ToolButton {
-                text: qsTr("\u2630")
-                font.pixelSize: 24
-                onClicked: drawer.open()
-            }
-
-            Label {
-                text: appWindow.title
-                font.pixelSize: 20
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            serverFullVersionLabel.text = "<b>Версія сервера:</b> Помилка: " + errorMessage;
+            serverBuildDateTimeLabel.text = "";
+            console.error("QML: Error getting server version in AboutDialog:", errorMessage);
         }
     }
 
-    // --- Бічне меню (Drawer) ---
-    Drawer {
-        id: drawer
-        // Залишаємо без anchors, ApplicationWindow сам їх правильно розміщує
-        width: 250 // Ширина бічного меню
-        modal: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    contentItem: ScrollView {
+        implicitWidth: aboutDialog.width
+        implicitHeight: aboutDialog.height
 
         ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 10
-            spacing: 5
+            width: parent.width
+            anchors.margins: 15
+            spacing: 5 // Або те значення, яке ви встановили для зменшення відстані
 
             Label {
-                text: "Меню"
-                font.pixelSize: 20
-                font.bold: true
+                text: "<b>Про програму GandalfWhite Client</b>"
+                font.pixelSize: 18
                 Layout.alignment: Qt.AlignHCenter
+            }
+
+            Label {
+                id: clientVersionLabel
+                text: "<b>Версія клієнта:</b> " + backendClient.clientVersionString
+                font.pixelSize: 16
+            }
+            Label {
+                id: clientBuildDateLabel
+                text: "<b>Дата збірки:</b> " + backendClient.clientBuildDate
+                font.pixelSize: 14
+                color: "gray"
+            }
+            Label {
+                id: clientBuildTimeLabel
+                text: "<b>Час збірки:</b> " + backendClient.clientBuildTime
+                font.pixelSize: 14
+                color: "gray"
             }
 
             Rectangle {
@@ -83,34 +97,53 @@ ApplicationWindow {
                 color: "lightgray"
             }
 
-            Button {
-                text: "Про програму"
-                Layout.fillWidth: true
-                onClicked: {
-                    console.log("QML: 'Про програму' clicked.");
-                    drawer.close();
-                    aboutDialog.open(appWindow); // <<< ВІДКРИВАЄМО ДІАЛОГ, ЦЕНТРУЮЧИ ВІДНОСНО appWindow
-                }
+            Label {
+                text: "<b>Про сервер ArnorBeacon</b>"
+                font.pixelSize: 16
+                Layout.alignment: Qt.AlignHCenter
+            }
+
+            Label {
+                id: serverFullVersionLabel
+                text: "<b>Версія сервера:</b> Завантаження..."
+                font.pixelSize: 16
+            }
+            Label {
+                id: serverBuildDateTimeLabel
+                text: ""
+                font.pixelSize: 14
+                color: "gray"
+            }
+
+            Item { Layout.fillHeight: true }
+
+            Label {
+                text: "<b>Опис:</b> Клієнт для моніторингу стану сервера ArnorBeacon."
+                wrapMode: Label.WordWrap
+                font.pixelSize: 14
+            }
+            Label {
+                text: "<b>Автор:</b> Ваше Ім'я/Компанія"
+                font.pixelSize: 14
+                color: "gray"
+            }
+            Label {
+                text: "© 2025 Всі права захищені."
+                font.pixelSize: 12
+                color: "darkgray"
+                Layout.alignment: Qt.AlignHCenter
             }
         }
     }
 
-    // --- Головний вміст вікна ---
-    ColumnLayout {
-        anchors.fill: parent // ApplicationWindow автоматично керує розміром і положенням основного вмісту
-        anchors.margins: 10 // Залишаємо відступи
-        spacing: 10
-
-        Label {
-            text: "Ласкаво просимо до GandalfWhite Client!"
-            font.pixelSize: 18
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 50 // Невеликий відступ від верху
-        }
+    onOpened: {
+        backendClient.requestVersion();
+        console.log("QML: Діалог 'Про програму' відкрито.");
     }
-    // >>>>>>>>>>> ДОДАЙТЕ ЦЕЙ НОВИЙ БЛОК СЮДИ <<<<<<<<<<<
-    // Додаємо екземпляр нашого діалогу "Про програму"
-    AboutDialog {
-        id: aboutDialog // Ми даємо йому ID, щоб мати змогу посилатися на нього з інших частин коду QML
+
+    onClosed: {
+        console.log("QML: Діалог 'Про програму' закрито.");
+        serverFullVersionLabel.text = "<b>Версія сервера:</b> Завантаження...";
+        serverBuildDateTimeLabel.text = "";
     }
 }

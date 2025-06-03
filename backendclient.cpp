@@ -1,6 +1,8 @@
 // backendclient.cpp
 #include "backendclient.h"
+#include "version.h"
 #include <QDebug>
+#include <QString>
 #include <QJsonParseError>
 
 BackendClient::BackendClient(QObject *parent)
@@ -10,6 +12,11 @@ BackendClient::BackendClient(QObject *parent)
 {
     // Немає необхідності підключати finished() тут для кожного маршруту,
     // оскільки ми будемо обробляти відповідь в лямбді для кожного запиту
+    // Ініціалізуємо властивості версії клієнта з макросів (з version.h)
+    m_clientVersionString = GW_VERSION_STR;
+    m_clientBuildDate = GW_BUILD_DATE;
+    m_clientBuildTime = GW_BUILD_TIME;
+    qDebug() << "Client Version String:" << m_clientVersionString;
 }
 
 void BackendClient::requestStatus()
@@ -80,4 +87,17 @@ void BackendClient::onVersionReplyFinished(QNetworkReply* reply)
         emit networkError("Network error for /version: " + reply->errorString());
     }
     reply->deleteLater();
+}
+
+// Реалізації методів READ для Q_PROPERTY
+QString BackendClient::clientVersionString() const {
+    return m_clientVersionString;
+}
+
+QString BackendClient::clientBuildDate() const {
+    return m_clientBuildDate;
+}
+
+QString BackendClient::clientBuildTime() const {
+    return m_clientBuildTime;
 }
