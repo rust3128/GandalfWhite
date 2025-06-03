@@ -2,37 +2,54 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Controls.Material 2.15 // ОБОВ'ЯЗКОВО для Material.background
 
 Dialog {
     id: aboutDialog
     title: "Про програму GandalfWhite"
     width: 400
-    height: 360 // Або ваша оптимальна висота
+    height: 480
     modal: true
 
-    standardButtons: Dialog.Ok
+    // --- Закруглені кути для фону діалогу ---
+    background: Rectangle {
+        color: aboutDialog.Material.background // Використовуємо колір з Material Design
+        radius: 15 // Радіус закруглення
+        border.color: "lightgray"
+        border.width: 1
+    }
+    // --- Кінець закруглених кутів ---
+
+    // standardButtons: undefined  <-- ЦЕЙ РЯДОК БУВ ВИДАЛЕНИЙ!
+
+    footer: Frame { // Використовуємо футер для кастомної кнопки
+        Layout.fillWidth: true
+        padding: 10 // Відступи навколо кнопки
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter // Центруємо вміст RowLayout (нашу кнопку)
+
+            Button {
+                text: "OK" // Встановлюємо текст кнопки явно
+                onClicked: aboutDialog.close() // Закриваємо діалог
+                Layout.preferredWidth: 100 // Задаємо фіксовану ширину
+            }
+        }
+    }
+    // --- Кінець центрування кнопки "OK" ---
 
     Connections {
         target: backendClient
 
         function onVersionReceived(data) {
-            // Ці дані надходять з сервера ArnorBeacon
             serverFullVersionLabel.text = "<b>Повна версія:</b> " + data.version.full_version;
-            // !!! ВИДАЛІТЬ ЦІ РЯДКИ:
-            // serverMajorLabel.text = "<b>Major:</b> " + data.version.major;
-            // serverMinorLabel.text = "<b>Minor:</b> " + data.version.minor;
-            // serverBuildLabel.text = "<b>Build:</b> " + data.version.build;
-            serverBuildDateTimeLabel.text = "<b>Час збірки:</b> " + data.version.build_datetime; // Використовуйте build_datetime
+            serverBuildDateTimeLabel.text = "<b>Час збірки:</b> " + data.version.build_datetime;
             console.log("QML: Server Version Data Applied to AboutDialog.");
         }
 
         function onNetworkError(errorMessage) {
-            // Обробка помилок для версії сервера
             serverFullVersionLabel.text = "<b>Версія сервера:</b> Помилка: " + errorMessage;
-            // !!! ВИДАЛІТЬ ЦІ РЯДКИ АБО ЗРОБІТЬ ЇХ ПУСТИМИ:
-            // serverMajorLabel.text = "";
-            // serverMinorLabel.text = "";
-            // serverBuildLabel.text = "";
             serverBuildDateTimeLabel.text = "";
             console.error("QML: Error getting server version in AboutDialog:", errorMessage);
         }
@@ -45,7 +62,7 @@ Dialog {
         ColumnLayout {
             width: parent.width
             anchors.margins: 15
-            spacing: 5 // Або те значення, яке ви встановили для зменшення відстані
+            spacing: 5
 
             Label {
                 text: "<b>Про програму GandalfWhite Client</b>"
@@ -88,25 +105,6 @@ Dialog {
                 text: "<b>Версія сервера:</b> Завантаження..."
                 font.pixelSize: 16
             }
-            // !!! ВИДАЛІТЬ ЦІ БЛОКИ Label:
-            // Label {
-            //     id: serverMajorLabel
-            //     text: ""
-            //     font.pixelSize: 14
-            //     color: "gray"
-            // }
-            // Label {
-            //     id: serverMinorLabel
-            //     text: ""
-            //     font.pixelSize: 14
-            //     color: "gray"
-            // }
-            // Label {
-            //     id: serverBuildLabel
-            //     text: ""
-            //     font.pixelSize: 14
-            //     color: "gray"
-            // }
             Label {
                 id: serverBuildDateTimeLabel
                 text: ""
@@ -122,7 +120,7 @@ Dialog {
                 font.pixelSize: 14
             }
             Label {
-                text: "<b>Автор:</b> Ruslan Polupan/ПромТерміналСервіс"
+                text: "<b>Автор:</b> Ваше Ім'я/Компанія"
                 font.pixelSize: 14
                 color: "gray"
             }
@@ -142,12 +140,7 @@ Dialog {
 
     onClosed: {
         console.log("QML: Діалог 'Про програму' закрито.");
-        // Скидаємо інформацію про сервер, щоб при наступному відкритті була анімація завантаження
         serverFullVersionLabel.text = "<b>Версія сервера:</b> Завантаження...";
-        // !!! ВИДАЛІТЬ ЦІ РЯДКИ АБО ЗРОБІТЬ ЇХ ПУСТИМИ:
-        // serverMajorLabel.text = "";
-        // serverMinorLabel.text = "";
-        // serverBuildLabel.text = "";
         serverBuildDateTimeLabel.text = "";
     }
 }
