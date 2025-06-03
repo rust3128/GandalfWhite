@@ -1,32 +1,79 @@
-import QtQuick
-import QtQuick.Controls // Для кнопок та текстових полів
-import QtQuick.Layouts // Для зручного розташування елементів
+// Main.qml - це основний файл інтерфейсу вашого клієнтського застосунку GandalfWhite.
+
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
 Window {
     width: 640
-    height: 600 // Збільшуємо висоту для розміщення нових елементів
+    height: 480 // Зменшимо висоту, оскільки менше елементів
     visible: true
-    title: "GandalfWhite"
+    title: "GandalfWhite - ArnorBeacon Client (Status Only)"
 
-    // Тут ми підключаємося до нашого C++ об'єкта "backendClient"
-    // Він був зареєстрований у main.cpp
+    // ---------- БЛОК ІНТЕГРАЦІЇ З C++ (backendClient) ----------
     Connections {
         target: backendClient
 
-        function onStatusReceived(data) { // <<< ЗМІНЕНО: Додано "function" та список аргументів (data)
-            statusOutput.text = JSON.stringify(data, null, 2) // Форматуємо JSON для кращого відображення
+        function onStatusReceived(data) {
+            // Оновлюємо детальне поле статусу
+            statusOutput.text = JSON.stringify(data, null, 2)
             console.log("QML: Status Data Received: ", JSON.stringify(data))
+
+            // Оновлюємо загальний статус у "статус-барі"
+            // data.status є "ok", якщо все добре, або інше значення з JSON
+            generalStatusLabel.text = "Сервер: " + data.status + " | Оновлено: " + data.timestamp;
+
+            // Запускаємо таймер тільки після першого успішного отримання статусу
+            if (!requestTimer.running) {
+                requestTimer.start();
+            }
         }
 
-        function onVersionReceived(data) { // <<< ЗМІНЕНО: Додано "function" та список аргументів (data)
-            versionOutput.text = JSON.stringify(data, null, 2) // Форматуємо JSON
-            console.log("QML: Version Data Received: ", JSON.stringify(data))
+        // Версія поки що не обробляється і не відображається детально
+        function onVersionReceived(data) {
+            // console.log("QML: Version Data Received (not displayed): ", JSON.stringify(data))
+            // Якщо таймер не запущений, запускаємо його після отримання будь-якої відповіді
+            if (!requestTimer.running) {
+                requestTimer.start();
+            }
         }
 
-        function onNetworkError(errorMessage) { // <<< ЗМІНЕНО: Додано "function" та список аргументів (errorMessage)
+        function onNetworkError(errorMessage) {
+            // Оновлюємо поле помилок
             errorOutput.text = "Error: " + errorMessage
             console.error("QML: Network Error: ", errorMessage)
+            // Оновлюємо загальний статус у "статус-барі" при помилці
+            generalStatusLabel.text = "ПОМИЛКА! " + errorMessage;
+            // Зупиняємо таймер при помилці, щоб не надсилати запити безперервно
+            requestTimer.stop();
         }
+    }
+    // ---------- КІНЕЦЬ БЛОГІВ ІНТЕГРАЦІЇ З C++ ----------
+
+    // Таймер для періодичного запиту статусу
+    Timer {
+        id: requestTimer
+        interval: 5000 // Інтервал у мілісекундах (5 секунд)
+        running: false // Спочатку не запущено
+        repeat: true // Повторювати запити
+        onTriggered: {
+            // Виконуємо запит статусу
+            generalStatusLabel.text = "Запит статусу...";
+            statusOutput.text = "Завантаження статусу...";
+            errorOutput.text = ""; // Очищаємо помилки перед новим запитом
+            backendClient.requestStatus();
+        }
+    }
+
+    // Цей блок виконується, коли компонент Window повністю завантажений та ініціалізований.
+    Component.onCompleted: {
+        console.log("QML: Window component completed. Initiating initial status request.");
+        // Ініціюємо перший запит статусу одразу після запуску.
+        // Таймер запуститься з onStatusReceived або onNetworkError.
+        generalStatusLabel.text = "Ініціалізація запиту...";
+        statusOutput.text = "Завантаження статусу...";
+        errorOutput.text = "";
+        backendClient.requestStatus();
     }
 
     ColumnLayout {
@@ -35,54 +82,35 @@ Window {
         spacing: 10
 
         Label {
-            text: "ArnorBeacon Server Status/Version"
+            text: "ArnorBeacon Server Status"
             font.pixelSize: 24
             Layout.alignment: Qt.AlignHCenter
         }
 
-        // Секція для Status
-        RowLayout {
+        // Розгорнуте поле для детального статусу (якщо потрібно бачити весь JSON)
+        TextArea {
+            id: statusOutput
             Layout.fillWidth: true
-            Button {
-                text: "Запит /status"
-                onClicked: {
-                    statusOutput.text = "Завантаження..."
-                    errorOutput.text = "" // Очищаємо помилки
-                    backendClient.requestStatus()
-                }
-            }
-            Label {
-                text: "Відповідь /status:"
-            }
-            TextArea {
-                id: statusOutput
-                Layout.fillWidth: true
-                Layout.minimumHeight: 100
-                readOnly: true
-                text: "Натисніть кнопку для отримання статусу"
-            }
+            Layout.fillHeight: true // Дозволяємо займати всю доступну висоту
+            readOnly: true
+            text: "Очікування статусу..."
         }
 
-        // Секція для Version
-        RowLayout {
+        // Статус-бар внизу вікна
+        Rectangle {
             Layout.fillWidth: true
-            Button {
-                text: "Запит /version"
-                onClicked: {
-                    versionOutput.text = "Завантаження..."
-                    errorOutput.text = "" // Очищаємо помилки
-                    backendClient.requestVersion()
-                }
-            }
+            Layout.preferredHeight: 30 // Фіксована висота для статус-бару
+            color: "lightgray"
+            border.color: "gray"
+            border.width: 1
+
             Label {
-                text: "Відповідь /version:"
-            }
-            TextArea {
-                id: versionOutput
-                Layout.fillWidth: true
-                Layout.minimumHeight: 150
-                readOnly: true
-                text: "Натисніть кнопку для отримання версії"
+                id: generalStatusLabel
+                anchors.fill: parent
+                anchors.margins: 5
+                verticalAlignment: Text.AlignVCenter
+                text: "Застосунок запущено." // Початковий текст статус-бару
+                font.pixelSize: 14
             }
         }
 
