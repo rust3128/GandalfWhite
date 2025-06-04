@@ -61,7 +61,7 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 # --- Кінець логіки версіонування ---
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -84,6 +84,7 @@ qt_add_qml_module(GandalfWhite
         RESOURCES build_number.txt
         RESOURCES
         RESOURCES version.h.in
+        QML_FILES SettingsDialog.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -99,6 +100,7 @@ set_target_properties(GandalfWhite PROPERTIES
 
 target_link_libraries(GandalfWhite
     PRIVATE Qt6::Quick
+    Qt6::QuickControls2 # Додайте цей рядок
 )
 
 include(GNUInstallDirs)

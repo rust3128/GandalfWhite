@@ -1,12 +1,15 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext> // Для доступу до кореневого контексту QML
-
+#include <QQuickStyle> // <--- Додайте цей імпорт
 #include "backendclient.h" // Включаємо новий клас
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    // !!! ВАЖЛИВО: Встановіть стиль для QML Controls !!!
+    QQuickStyle::setStyle("Material"); // <--- Додайте цей рядок
 
     QQmlApplicationEngine engine;
     QObject::connect(

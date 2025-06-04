@@ -2,42 +2,44 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtQuick.Controls.Material 2.15 // ОБОВ'ЯЗКОВО для Material.background
+import QtQuick.Controls.Material 2.15
 
 Dialog {
     id: aboutDialog
     title: "Про програму GandalfWhite"
     width: 400
-    height: 480
+    height: 480 // Або ваша оптимальна висота
     modal: true
 
-    // --- Закруглені кути для фону діалогу ---
+    // Додаємо локальні властивості для зберігання версії клієнта
+    property string _clientVersionString: ""
+    property string _clientBuildDate: ""
+    property string _clientBuildTime: ""
+
     background: Rectangle {
-        color: aboutDialog.Material.background // Використовуємо колір з Material Design
-        radius: 15 // Радіус закруглення
+        color: aboutDialog.Material.background
+        radius: 15
         border.color: "lightgray"
         border.width: 1
     }
-    // --- Кінець закруглених кутів ---
 
-    // standardButtons: undefined  <-- ЦЕЙ РЯДОК БУВ ВИДАЛЕНИЙ!
-
-    footer: Frame { // Використовуємо футер для кастомної кнопки
-        Layout.fillWidth: true
+    footer: Frame { // Використовуємо Frame у футері
+        Layout.fillWidth: true // Футер заповнює всю доступну ширину
         padding: 10 // Відступи навколо кнопки
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter // Центруємо вміст RowLayout (нашу кнопку)
+        // Ми видаляємо RowLayout і розміщуємо кнопку прямо у Frame,
+        // використовуючи anchors для центрування.
+        Button {
+            text: "OK"
+            onClicked: aboutDialog.close()
+            width: 100 // Задаємо фіксовану ширину для кнопки
+            height: 40 // Можливо, задати фіксовану висоту для кращого вигляду
 
-            Button {
-                text: "OK" // Встановлюємо текст кнопки явно
-                onClicked: aboutDialog.close() // Закриваємо діалог
-                Layout.preferredWidth: 100 // Задаємо фіксовану ширину
-            }
+            // !!! ГОЛОВНА ЗМІНА: Прив'язуємо горизонтальний центр кнопки до центру батьківського Frame !!!
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter // Центруємо також по вертикалі у футері
         }
     }
-    // --- Кінець центрування кнопки "OK" ---
 
     Connections {
         target: backendClient
@@ -72,18 +74,18 @@ Dialog {
 
             Label {
                 id: clientVersionLabel
-                text: "<b>Версія клієнта:</b> " + backendClient.clientVersionString
+                text: "<b>Версія клієнта:</b> " + aboutDialog._clientVersionString
                 font.pixelSize: 16
             }
             Label {
                 id: clientBuildDateLabel
-                text: "<b>Дата збірки:</b> " + backendClient.clientBuildDate
+                text: "<b>Дата збірки:</b> " + aboutDialog._clientBuildDate
                 font.pixelSize: 14
                 color: "gray"
             }
             Label {
                 id: clientBuildTimeLabel
-                text: "<b>Час збірки:</b> " + backendClient.clientBuildTime
+                text: "<b>Час збірки:</b> " + aboutDialog._clientBuildTime
                 font.pixelSize: 14
                 color: "gray"
             }
@@ -130,6 +132,14 @@ Dialog {
                 color: "darkgray"
                 Layout.alignment: Qt.AlignHCenter
             }
+        }
+    }
+
+    Component.onCompleted: {
+        if (backendClient) { // Перевірка, щоб уникнути помилок
+            _clientVersionString = backendClient.clientVersionString;
+            _clientBuildDate = backendClient.clientBuildDate;
+            _clientBuildTime = backendClient.clientBuildTime;
         }
     }
 
